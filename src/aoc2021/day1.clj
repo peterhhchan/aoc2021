@@ -5,14 +5,14 @@
        clojure.string/split-lines
        (map #(Integer/parseInt %))))
 
-;;(def data (read-data))
+(def data (read-data))
 
-(defn part1 [data]
-  (->> (map - (rest data) data)
+(defn part1 []
+  (->> (map - (drop 1 data) data)
        (filter pos?)
        count))
 
-(defn part2 [data]
-  (->> (map - (rest (drop 2 data)) data)
+(defn part2 []
+  (->> (map - (drop 3 data) data)
        (filter pos?)
        count))
