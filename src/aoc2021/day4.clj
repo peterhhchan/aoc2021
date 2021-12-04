@@ -7,49 +7,42 @@
                    (map #(Integer/parseInt %)))
      :cards   (->> (partition 6 lines)
                    (map rest)
-                   (map (fn [cs]
+                   (map (fn [cards]
                           (let [c (->> (mapv (fn [card]
                                                (->> (clojure.string/split (clojure.string/trim card) #" +")
                                                     (mapv #(Integer/parseInt %))))
-                                             cs))]
-                            {:rows (concat (map (partial into #{}) c)
-                                           (->> (apply map vector c)
-                                                (map (partial into #{}))))}))))}))
+                                             cards))]
+                            (concat (map (partial into #{}) c)
+                                    (->> (apply map vector c)
+                                         (map (partial into #{}))))))))}))
 
 (defn winner? [card]
-  (->> (:rows card)
-       (map empty?)
+  (->> (map empty? card)
        (some true?)))
 
-(defn part1 []
+(defn score [card number]
+  (* number
+     (->> (flatten card)
+          (apply clojure.set/union)
+          (reduce +))))
+
+(defn winners []
   (let [{:keys [numbers cards]} (read-data)]
     (loop [cs cards
-           ns numbers]
-      (let [updated    (map (fn [card]
-                          (update card :rows (fn [rows] (map #(disj % (first ns)) rows ))))
-                        cs)
+           ns numbers
+           scores []]
+      (if (seq cs)
+        (let [updated (map (partial map #(disj % (first ns)) ) cs)
+              winner  (filter winner? updated)]
+          (if (seq winner)
+            (recur (remove winner? updated)
+                   (rest ns)
+                   (conj scores (score (first winner) (first ns))))
+            (recur updated (rest ns) scores)))
+        scores))))
 
-            winner (filter winner? updated)]
-        (if (seq winner)
-          (* (first ns)
-             (->> (flatten (:rows (first winner)))
-                  (apply clojure.set/union)
-                  (reduce +)))
-          (recur updated (rest ns)))))))
+(defn part1 []
+  (first (winners)))
 
 (defn part2 []
-  (let [{:keys [numbers cards]} (read-data)]
-    (loop [cs cards
-           ns numbers]
-      (let [new    (map (fn [card]
-                          (update card :rows (fn [rows] (map #(disj % (first ns)) rows ))))
-                        cs)
-            winner (filter winner? new)]
-        (if (and (seq winner)
-                 (= 1 (count cs)))
-          (* (first ns)
-             (->> (flatten (:rows (first winner)))
-                  (apply clojure.set/union)
-                  (reduce +)))
-          (recur (remove winner? new)
-                 (rest ns)))))))
+  (last (winners)))
