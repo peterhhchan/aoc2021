@@ -4,6 +4,8 @@
   (->> (re-seq #"\d+" s)
        (map #(Integer/parseInt %))))
 
+
+
 (defn read-data []
   (let [[f & lines] (->> (slurp "data/day4.txt")
                          clojure.string/split-lines)]
@@ -11,10 +13,10 @@
      :cards   (->> (map str-to-ints lines)
                    flatten
                    (partition 25)
-                   (map #(let [rows (partition 5 %)]
-                           (->> (apply map vector rows)
-                                (concat rows )
-                                (map (partial into #{}))))))}))
+                   (map #(->> (partition 5 %)
+                              ((juxt identity (partial apply map vector)))
+                              (into [] cat)
+                              (map (partial into #{})))))}))
 
 (defn score [card number]
   (* number
@@ -25,7 +27,7 @@
   (let [{:keys [numbers cards]} (read-data)]
     (loop [cs           cards
            [num & nums] numbers
-           scores       (list)]
+           scores       []]
       (if (and (seq cs) num)
         (let [results (->> cs
                            (map (partial map #(disj % num)))
@@ -39,4 +41,4 @@
 
 
 (def part1  (first (winners))) ;; 41503
-(def part2  (last  (winners))) ;; 3178
+(def part2  (peek  (winners))) ;; 3178
