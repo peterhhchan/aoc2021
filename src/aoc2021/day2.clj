@@ -53,7 +53,4 @@
                           :depth       0}))]
     (->> (select-keys res [:depth :horizontal])
          vals
-         (reduce *)
-
-)
-))
+         (reduce *))))

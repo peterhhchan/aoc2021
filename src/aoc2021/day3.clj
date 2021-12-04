@@ -5,11 +5,11 @@
   (->> (slurp "data/day3.txt")
        clojure.string/split-lines
        (map (fn [s]
-              (->> (map identity s)
+              (->> (seq s)
                    (map #(- (int %) (int \0))))))))
 
 (defn to-decimal [ns]
-  (read-string (str "2r" (apply str ns))))
+  (read-string (apply str "2r" ns)))
 
 (defn part1 []
   (let [data   (read-data)
@@ -38,8 +38,8 @@
     (if (= 1 (count rs))
       (to-decimal (first rs))
       (let [counts   (->> rs
-                        (map #(nth % n))
-                        (reduce +))
+                          (map #(nth % n))
+                          (reduce +))
             keep-bit (f counts (- (count rs) counts))]
         (recur (filter #(= (nth  % n) keep-bit ) rs)
                (inc n))))))
