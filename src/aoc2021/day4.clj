@@ -4,8 +4,6 @@
   (->> (re-seq #"\d+" s)
        (map #(Integer/parseInt %))))
 
-
-
 (defn read-data []
   (let [[f & lines] (->> (slurp "data/day4.txt")
                          clojure.string/split-lines)]
@@ -15,7 +13,7 @@
                    (partition 25)
                    (map #(->> (partition 5 %)
                               ((juxt identity (partial apply map vector)))
-                              (into [] cat)
+                              (apply concat)
                               (map (partial into #{})))))}))
 
 (defn score [card number]
