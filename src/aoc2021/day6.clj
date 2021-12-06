@@ -10,21 +10,21 @@
        (str-to-ints)))
 
 (defn step [state]
-  (let [births (or (get state 0) 0)]
-    (->> state
-         (map (fn [[k v]]
-                (cond (pos? k)  {(dec k) v}
-                      (zero? k) {8 v})))
-         (into {})
-         (merge-with + {6 births}))))
+  (->> state
+       (map (fn [[k v]]
+              (cond (pos? k)  {(dec k) v}
+                    (zero? k) {8 v})))
+       (into {})
+       (merge-with + {6 (get state 0 0)})))
 
 (defn count-births [n]
-  (->>   (frequencies (parse-data))
-         (iterate step)
-         (drop n)
-         first
-         (vals)
-         (reduce +)))
+  (->> (parse-data)
+       (frequencies)
+       (iterate step)
+       (drop n)
+       first
+       (vals)
+       (reduce +)))
 
 ;;387413
 (defn part1 []
