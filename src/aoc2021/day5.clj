@@ -47,15 +47,15 @@
     (> a b) dec
     (< a b) inc))
 
-(defn points-between [[ax ay bx by]]
-  (let [fx (step ax bx)
-        fy (step ay by)]
-    (->> [ax ay]
+(defn points-between [[x1 y1 x2 y2]]
+  (let [step-x (step x1 x2)
+        step-y (step y1 y2)]
+    (->> [x1 y1]
          (iterate (fn [[x y]]
-                    [(fx x) (fy y)]))
+                    [(step-x x) (step-y y)]))
          (take-while (fn [[x y]]
-                       (not (and (= x (fx bx))
-                                 (= y (fy by)))))))))
+                       (not (and (= x (step-x x2))
+                                 (= y (step-y y2)))))))))
 
 (defn diagonal? [[ax ay bx by]]
   (not (or (= ax bx)
