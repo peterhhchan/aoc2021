@@ -12,11 +12,15 @@
 (defn abs [x y]
   (Math/abs (- x y)))
 
+;;
+;; Approach #1
 ;; Brute force approach
-(defn cost-fn-1 [start end]
+;;
+
+(defn cost-1 [start end]
   (abs start end))
 
-(defn cost-fn-2 [start end]
+(defn cost-2 [start end]
   (let [n (abs start end)]
     (/ (* n (inc n)) 2)))
 
@@ -31,14 +35,18 @@
 
 (defn part1 []
   ;;326132
-  (cheapest cost-fn-1))
+  (cheapest cost-1))
 
 (defn part2 []
   ;;88612508
-  (cheapest cost-fn-2))
+  (cheapest cost-2))
 
-
+;;
+;; Approach #2
 ;; Search using binary search
+;;
+
+
 (defn mid [a b]
   (int (+ a (/ (- b a) 2))))
 
@@ -57,5 +65,21 @@
             (recur (inc md) mx (min higher best))))))))
 
 ;; Yields the same answers as above
-(def part-1 (min-cost cost-fn-1))
-(def part-2 (min-cost cost-fn-2))
+(def part-1 (min-cost cost-1))
+(def part-2 (min-cost cost-2))
+
+
+;;
+;;  Approach #3
+;;
+
+(defn part1-a []
+  (let [data (sort (parse-data))
+        mid  (/ (count data) 2)]
+    (cost data cost-1 (nth data mid))))
+
+(defn part2-a []
+  (let [data (parse-data)
+        mean (quot (reduce + data) (count data))]
+    (min (cost data cost-2 mean )
+         (cost data cost-2 (inc mean) ))))
