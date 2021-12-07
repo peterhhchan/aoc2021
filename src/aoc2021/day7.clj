@@ -56,5 +56,6 @@
             (recur mn md (min lower best))
             (recur (inc md) mx (min higher best))))))))
 
+;; Yields the same answers as above
 (def part-1 (min-cost cost-fn-1))
 (def part-2 (min-cost cost-fn-2))
