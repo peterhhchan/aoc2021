@@ -9,8 +9,7 @@
   (->> (slurp "data/day7.txt")
        (str-to-ints)))
 
-(defn abs [x y]
-  (Math/abs (- x y)))
+(defn abs [x y] (Math/abs (- ^long x ^long y)))
 
 ;;
 ;; Approach #1
@@ -45,7 +44,6 @@
 ;; Approach #2
 ;; Search using binary search
 ;;
-
 
 (defn mid [a b]
   (int (+ a (/ (- b a) 2))))
