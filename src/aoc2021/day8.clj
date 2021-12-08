@@ -36,40 +36,38 @@
     (->> (permutations s)
          (map #(zipmap % s)))))
 
-(defn solve-line [line]
-  (let [alls (all-permutations)
-        sols (->> {0 "abcefg"
-                   1 "cf"
-                   2 "acdeg"
-                   3 "acdfg"
-                   4 "bcdf"
-                   5 "abdfg"
-                   6 "abdefg"
-                   7 "acf"
-                   8 "abcdefg"
-                   9 "abcdfg"}
-                  (reduce-kv (fn [m k v]
-                               (assoc m (set v) k))
-                             {}))]
-    (->> alls
-         (map (fn [s]
-                (->> line
-                     (map #(->> %1
-                                (map s)
-                                set))
-                     (filter sols))))
-         (filter #(= 14 (count %)))
-         first
-         (drop 10)
-         (map sols)
+(defn solve-line-a [digits]
+  (let [default  (->> {0 "abcefg"
+                       1 "cf"
+                       2 "acdeg"
+                       3 "acdfg"
+                       4 "bcdf"
+                       5 "abdfg"
+                       6 "abdefg"
+                       7 "acf"
+                       8 "abcdefg"
+                       9 "abcdfg"}
+                     (reduce-kv (fn [m k v]
+                                  (assoc m (set v) k))
+                                {}))
+        solution (->> (all-permutations)
+                      (filter (fn [p]
+                                (->> (take 10 digits)
+                                     (map #(set (map p %1)))
+                                     (every? default))))
+                      first)]
+    (->> (drop 10 digits)
+         (map (fn [digit]
+                (-> (map solution digit)
+                     set
+                     default)))
          (apply str)
          (parse-int))))
 
 ;; 1028926
-;; Very slow ~ 35s
-(defn part2 []
+(defn part2a []
   (->> (parse-data)
-       (pmap solve-line)
+       (pmap solve-line-a)
        (reduce +)))
 
 ;; Approach 2
@@ -108,7 +106,7 @@
           (apply str)
           (parse-int))))
 
-(defn part2 []
+(defn part2b []
   (->> (parse-data)
-       (map solve-line)
+       (pmap solve-line)
        (reduce +)))
