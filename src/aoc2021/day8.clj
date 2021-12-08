@@ -54,10 +54,9 @@
     (->> alls
          (map (fn [s]
                 (->> line
-                     (map (fn [w]
-                        (->> w
-                             (map s)
-                             set)))
+                     (map #(->> %1
+                                (map s)
+                                set))
                      (filter sols))))
          (filter #(= 14 (count %)))
          first
@@ -67,7 +66,49 @@
          (parse-int))))
 
 ;; 1028926
+;; Very slow ~ 35s
 (defn part2 []
   (->> (parse-data)
        (pmap solve-line)
+       (reduce +)))
+
+;; Approach 2
+(defn result [segments col]
+  (first (filter #(= segments (count %)) col)))
+
+(defn solve-line [line]
+  (let [line    (map set line)
+        display (take 10 line)
+        output  (drop 10 line)
+
+        p1   (result 2 display)
+        p4   (result 4 display)
+        p7   (result 3 display)
+        p8   (result 7 display)
+        p9   (->> (filter #(set/subset? p4 %) display)
+                  (remove #{p4 p8})
+                  first)
+
+        ;; 0 or 3
+        p03  (->> (filter #(set/subset? p1 %) display)
+                  (remove #{p1 p4 p7 p8 p9}))
+        p0   (result 6 p03)
+        p3   (result 5 p03)
+
+        ;; 2,5,6
+        p256 (remove (into #{p1 p4 p7 p8 p9} p03) display)
+        p6   (result 6 p256)
+        p25  (remove #{p6} p256)
+        p5   (first (filter #(set/subset? % p6) p25))
+        p2   (first (remove #{p5} p25))
+
+
+        solution   (zipmap [p0 p1 p2 p3 p4 p5 p6 p7 p8 p9] (range))]
+    (->>  (map solution output)
+          (apply str)
+          (parse-int))))
+
+(defn part2 []
+  (->> (parse-data)
+       (map solve-line)
        (reduce +)))
