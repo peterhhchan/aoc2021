@@ -14,8 +14,7 @@
   (->> (slurp "data/day2.txt")
        clojure.string/split-lines
        (map (fn [s]
-              (let [[d n]
-                    (clojure.string/split s #" " )]
+              (let [[d n] (clojure.string/split s #" ")]
                 [d (Integer/parseInt n)])))))
 
 
@@ -25,8 +24,8 @@
          (map (fn [[d n]]
                 (case d
                   "forward" {:x n}
-                  "down" {:z (- n)}
-                  "up" {:z n})))
+                  "down"    {:z (- n)}
+                  "up"      {:z n})))
          (apply merge-with +)
          (vals)
          (reduce *))))
