@@ -1,23 +1,25 @@
 (ns aoc2021.day3
   (:require [clojure.string :as s]))
 
-(defn read-data []
-  (->> (slurp "data/day3.txt")
-       clojure.string/split-lines
+(defn data [] (slurp "data/day3.txt"))
+
+(defn parse-input [input]
+  (->> (clojure.string/split-lines input)
        (map (fn [s]
               (->> (seq s)
                    (map #(- (int %) (int \0))))))))
 
 (defn to-decimal [ns]
-  (read-string (apply str "2r" ns)))
+  (Long/parseLong (apply str ns) 2))
 
-(defn part1 []
-  (let [data   (read-data)
+(defn part1 [input]
+  (let [data   (parse-input input)
         n      (count data)
         counts (apply map + data)
-        v1     (map #(if (< % ( * n 0.5)) 1 0) counts)
-        v2     (map #(if (< % ( * n 0.5)) 0 1) counts)]
-    (* (to-decimal v1)) (to-decimal v2)))
+        v1     (map #(if (< % (- n %)) 1 0) counts)
+        v2     (map #(if (< % (- n %)) 0 1) counts)]
+    (* (to-decimal v1)
+       (to-decimal v2))))
 
 
 (defn bit-to-keep-o2 [ones zeroes]
@@ -44,7 +46,7 @@
         (recur (filter #(= (nth  % n) keep-bit ) rs)
                (inc n))))))
 
-(defn part2 []
-  (let [data (read-data)]
+(defn part2 [input]
+  (let[data (parse-input input)]
     (* (part2-rating bit-to-keep-o2 data)
        (part2-rating bit-to-keep-co2 data))))

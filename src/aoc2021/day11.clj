@@ -52,18 +52,18 @@
           grid
           ks))
 
-
 (defn step [{:keys [grid flickers step]}]
   (let [will-flicker (loop [prev-grid grid
                             new-grid  (increment grid (keys grid))]
-                (let [ready (->> (filter (fn [[k v]]
-                                           (and (> v 9)
-                                                (<= (prev-grid k) 9))) new-grid)
-                                 (map first)
-                                 (mapcat adjs))]
-                  (if (seq ready)
-                    (recur new-grid (increment new-grid ready))
-                    new-grid)))]
+                       (let [ready (->> new-grid
+                                        (filter (fn [[k v]]
+                                                  (and (> v 9)
+                                                       (<= (prev-grid k) 9))))
+                                        (map first)
+                                        (mapcat adjs))]
+                         (if (seq ready)
+                           (recur new-grid (increment new-grid ready))
+                           new-grid)))]
 
     {:grid     (reduce-kv (fn [c k v]
                             (assoc c k (if (> v 9) 0 v)))
@@ -74,28 +74,26 @@
 
 ;; 1732
 (defn part1 [n]
-  (let [d (data)]
-    (->> {:grid (grid d)
-          :flickers 0
-          :step 0}
-         (iterate step)
-         (drop n)
-         (first))))
+  (->> {:grid (grid (data))
+        :flickers 0
+        :step 0}
+       (iterate step)
+       (drop n)
+       (first)))
 
 ;; 290
 (defn part2 []
-  (let [d (data)]
-    (->> {:grid (grid d)
-          :flickers 0
-          :step 0}
-         (iterate step)
-         (partition 2 1)
-         (map (fn [[a b]]
-                [(select-keys a [:step :flickers])
-                 (select-keys b [:step :flickers])]))
-         (map (fn [[a b]]
+  (->> {:grid (grid (data))
+        :flickers 0
+        :step 0}
+       (iterate step)
+       (partition 2 1)
+       (map (fn [[a b]]
+              [(select-keys a [:step :flickers])
+               (select-keys b [:step :flickers])]))
+       (map (fn [[a b]]
               {:change  (- (:flickers b)
                            (:flickers a))
                :step (:step b)}) )
-         (filter #(= 100 (:change %)))
-         (first))))
+       (filter #(= 100 (:change %)))
+       (first)))

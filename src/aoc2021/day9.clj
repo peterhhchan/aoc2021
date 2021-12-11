@@ -1,5 +1,4 @@
-(ns aoc2021.day9)
-(ns aoc2021.day8
+(ns aoc2021.day9
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
@@ -12,6 +11,7 @@
   (->> (slurp "data/day9.txt")
        (str/split-lines)
        (mapv str-to-ints)))
+
 
 (defn grid [n]
   (for [x (range n)

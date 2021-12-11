@@ -4,8 +4,10 @@
   (->> (re-seq #"\d+" s)
        (map #(Integer/parseInt %))))
 
-(defn read-data []
-  (let [[f & lines] (->> (slurp "data/day4.txt")
+(defn input [] (slurp "data/day4.txt"))
+
+(defn parse-input [input]
+  (let [[f & lines] (->> input
                          clojure.string/split-lines)]
     {:numbers (str-to-ints f)
      :cards   (->> (map str-to-ints lines)
@@ -21,22 +23,25 @@
      (->> (apply clojure.set/union card)
           (reduce +))))
 
-(defn winners []
-  (let [{:keys [numbers cards]} (read-data)]
-    (loop [cs           cards
-           [num & nums] numbers
-           scores       []]
-      (if (and (seq cs) num)
-        (let [results (->> cs
-                           (map (partial map #(disj % num)))
-                           (group-by #(some true? (map empty? %))))]
-            (recur (results nil)
-                   nums
-                   (->> (results true)
-                        (map #(score % num) )
-                        (apply conj scores))))
-        scores))))
+(defn find-winner [cs [n & nums]]
+  (lazy-seq
+   (when n
+     (let [results (->> cs
+                        (map (partial map #(disj % n)))
+                        (group-by #(some true? (map empty? %))))
+           new-scores (->> (results true)
+                           (map #(score % n)))]
+       (concat new-scores (find-winner (results nil) nums))))))
+
+(defn winners [input]
+  (let [{:keys [numbers cards]} (parse-input input)]
+    (find-winner cards numbers )))
 
 
-(def part1  (first (winners))) ;; 41503
-(def part2  (peek  (winners))) ;; 3178
+;; 41503
+(defn part1 [input]
+  (first (winners input)))
+
+;; 3178
+(defn part2 [input]
+  (last (winners input)))
