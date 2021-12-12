@@ -25,41 +25,55 @@ kj-dc")
   (slurp "data/day12.txt"))
 
 (defn parse-line [s]
-  (let [[s e] (re-seq #"\w+" s)]
-    {s [e]
-     e [s]}))
+  (let [[a b] (re-seq #"\w+" s)]
+    [a b]))
 
 (defn parse-input [input]
   (->> input
        (str/split-lines)
        (map parse-line)
-       (apply merge-with concat)))
+       (reduce (fn [m [a b]]
+                 (-> m
+                     (update a conj b)
+                     (update b conj a)))
+               {})
+       (reduce-kv (fn [m k v]
+                    (if (#{"end"} k)
+                      m
+                      (assoc m k (remove #{"start"} v))))
+                  {})))
 
-(defn big-cave? [c]
-  (= c (str/upper-case c)))
-
-(defn small-caves-once [freqs]
-  (->> freqs
-       (filter #(not (big-cave? (first %))))
-       (every? #(= 1 (second %)))))
-
-(defn my-path [caves hacky-filter p]
+(defn all-paths [caves visit-again? p]
   (let [visited (frequencies p)]
     (->> (get caves (first p))
          (mapcat (fn [n]
                    (cond
                      (= n "end")
                      (list (conj p n))
-                     (= n "start")
-                     nil
-                     (or (big-cave? n)
-                         (zero? (get visited n 0))
-                         (hacky-filter visited))
-                     (my-path caves hacky-filter (conj p n)))))
-         (seq))))
+                     (or (= n (str/upper-case n))
+                         (zero? (get visited n 0)))
+                     (all-paths caves visit-again? (conj p n))
+                     visit-again?
+                     (all-paths caves false (conj p n))))))))
 
+(defn count-paths [caves visit-again? p]
+  (let [visited (frequencies p)]
+    (->> (get caves (first p))
+         (keep (fn [n]
+                   (cond
+                     (= n "end")
+                     1
+                     (or (= n (str/upper-case n))
+                         (not (visited n)))
+                     (count-paths caves visit-again? (conj p n))
+                     visit-again?
+                     (count-paths caves false (conj p n)))))
+         (reduce +))))
+
+;; 5958
 (defn part1 [input]
-  (my-path (parse-input input) (constantly false) (list "start")))
+  (count-paths (parse-input input) false (list "start")))
 
+;; 150426
 (defn part2 [input]
-  (my-path (parse-input input) small-caves-once (list "start")))
+  (count-paths (parse-input input) true (list "start")))
