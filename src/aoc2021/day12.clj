@@ -77,3 +77,19 @@ kj-dc")
 ;; 150426
 (defn part2 [input]
   (count-paths (parse-input input) true (list "start")))
+
+(defn count-paths-faster [caves visit-again? visited current]
+  (->> (caves current)
+       (keep (fn [n]
+               (cond
+                 (= n "end")
+                 1
+                 (or (= n (str/upper-case n))
+                     (not (visited n)))
+                 (count-paths-faster caves visit-again? (conj visited current) n )
+                 visit-again?
+                 (count-paths-faster caves false (conj visited current) n ))))
+       (reduce +)))
+
+(defn part2b [input]
+  (count-paths-faster (parse-input input) true #{} "start"))
