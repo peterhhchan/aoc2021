@@ -30,13 +30,15 @@ fold along x=5")
 
 (defn parse-long [s]  (Long/parseLong s))
 
-(defn parse-coords [l]
-  (let [[x y] (re-seq #"\d+" l)]
-    [(parse-long x) (parse-long y)]))
+(defn parse-coords [line]
+  (->> (re-seq #"\d+" line)
+       (mapv parse-long)))
 
-(defn parse-folds [l]
-  (let [ins      (last (str/split l #" "))
-        [xy pos] (str/split ins #"=")]
+(defn parse-folds [line]
+  (let [[xy pos] (-> line
+                     (str/split  #" ")
+                     last
+                     (str/split  #"="))]
     [xy (parse-long pos)]))
 
 (defn parse-input [input]
@@ -57,35 +59,30 @@ fold along x=5")
                   [(- (+ line line) x) y])
                 (if (< y line)
                   [x y]
-                  [x (- (+ line line) y)]))))
-       set))
-
-(defn fold-paper [paper folds]
-  (reduce (fn [points fold]
-              (set (update-points points fold)))
-            paper
-            folds))
+                  [x (- (+ line line) y)]))))))
 
 (defn my-print [pts]
-  (let [max-y (inc (apply max (map second pts)))
-        max-x (inc (apply max (map first pts)))]
-    (for [y (range max-y)]
-      (->> (for [x (range max-x)]
-             (if (get pts [x y]) "8" " "))
-           str/join ))))
+  (let [max-y (apply max (map second pts))
+        max-x (apply max (map first pts))]
+    (for [y (range (inc max-y))]
+      (str/join (for [x (range (inc max-x))]
+                  (if (get pts [x y]) "8" " "))))))
+
 
 ;; 775
-(defn part1 []
-  (let [{:keys [points folds]} (parse-input (data))]
+(defn part1 [input]
+  (let [{:keys [points folds]} (parse-input input)]
     (->> folds
          (take 1)
-         (fold-paper points)
+         (reduce update-points points)
+         set
          (count))))
 
-(defn part2 []
-  (let [{:keys [points folds]} (parse-input (data))]
+(defn part2 [input]
+  (let [{:keys [points folds]} (parse-input input)]
     (->> folds
-         (fold-paper points)
+         (reduce update-points points)
+         set
          (my-print))))
 
 (def res

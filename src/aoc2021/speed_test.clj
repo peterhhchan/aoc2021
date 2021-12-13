@@ -1,7 +1,14 @@
 (ns aoc2021.speed-test
-  (:require [clojure.string :as str]
-            [clojure.set :as set]
-            [criterium.core :as crit]))
+  (:require
+   [aoc2021.day3 :as day3]
+   [aoc2021.day4 :as day4]
+   [aoc2021.day5 :as day5]
+   [aoc2021.day6 :as day6]
+   [aoc2021.day7 :as day7]
+
+   [clojure.string :as str]
+   [clojure.set :as set]
+   [criterium.core :as crit]))
 
 (def inputs (->> (range 1 10)
                  (mapv #(slurp (str "data/day" % ".txt")))))
@@ -69,16 +76,15 @@
 
 
 (defn run-all []
+  (->> (range)
+       (zipmap
+        [[day1-part1 day1-part2]
+         [day2-part1 day2-part2]
+         [day3/part1 day3/part2]
+         [day4/part1 day4/part2]
+         [day5/part1-b day5/part2-b]])
+       (map (fn [[[p1 p2] n]]
+              [(p1 (inputs n))
+               (p2 (inputs n))])))
 
-  (day1-part1 (inputs 0))
-  (day1-part2 (inputs 0))
-
-  (day2-part1 (inputs 1))
-  (day2-part2 (inputs 1))
-
-  (aoc2021.day3/part1 (inputs 2))
-  (aoc2021.day3/part2 (inputs 2))
-
-  (aoc2021.day4/part1 (inputs 3))
-  (aoc2021.day4/part1 (inputs 3))
 )
