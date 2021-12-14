@@ -2,8 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
-(defn data []
-  (slurp "data/day13.txt"))
+(defn data [] (slurp "data/day13.txt"))
 
 (defn test-data []
 "6,10
@@ -39,7 +38,8 @@ fold along x=5")
                      (str/split  #" ")
                      last
                      (str/split  #"="))]
-    [xy (parse-long pos)]))
+    [(if (= xy "x") 0 1)
+     (parse-long pos)]))
 
 (defn parse-input [input]
   (let [[a b]  (str/split input #"\n\n")
@@ -50,16 +50,12 @@ fold along x=5")
     {:points coords
      :folds  folds}))
 
-(defn update-points [pts [dir line]]
-  (->> pts
-       (map (fn [[x y]]
-              (if (= dir "x")
-                (if (< x line)
-                  [x y]
-                  [(- (+ line line) x) y])
-                (if (< y line)
-                  [x y]
-                  [x (- (+ line line) y)]))))))
+
+(defn fold [^long v ^long line]
+  (- line (Math/abs (- line v))))
+
+(defn fold-points [pts [axis line]]
+  (set (map #(update % axis fold line) pts)))
 
 (defn my-print [pts]
   (let [max-y (apply max (map second pts))
@@ -68,21 +64,18 @@ fold along x=5")
       (str/join (for [x (range (inc max-x))]
                   (if (get pts [x y]) "8" " "))))))
 
-
 ;; 775
 (defn part1 [input]
   (let [{:keys [points folds]} (parse-input input)]
     (->> folds
          (take 1)
-         (reduce update-points points)
-         set
+         (reduce fold-points points)
          (count))))
 
 (defn part2 [input]
   (let [{:keys [points folds]} (parse-input input)]
     (->> folds
-         (reduce update-points points)
-         set
+         (reduce fold-points points)
          (my-print))))
 
 (def res
