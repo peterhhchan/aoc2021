@@ -13,19 +13,13 @@
        (mapv #(mapv parse-long %))))
 
 (defn neighbors [n [x y]]
-  (->>
-   [[(inc x) y]
-    [x (inc y)]
-    [x (dec y)]
-    [(dec x) y]]
-   (filter (fn [[x y]]
-             (and (<= 0 y (dec n))
-                  (<= 0 x (dec n)))))))
+  [[(inc x) y]
+   [x (inc y)]
+   [x (dec y)]
+   [(dec x) y]])
 
 (defn my-inc [d]
-  (if (> (inc d) 9)
-    1
-    (inc d)))
+  (if (= d 9) 1 (inc d)))
 
 (defn expand [n input]
   (->> input
@@ -41,9 +35,11 @@
 
 (defn candidates [board size costs cur]
   (->> (neighbors size cur)
+       (filter board)
        (filter (fn [next]
-                 (or (nil? (costs next))
-                     (> (costs next) (+ (board next) (costs cur))))))))
+                 (> (get costs next 999999)
+                    (+ (board next) (costs cur)))))))
+
 
 (defn min-cost [coords]
   (let [size  (count coords)
@@ -52,7 +48,8 @@
                       {}
                       (for [x (range size) y (range size)] [x y]))]
     (loop [costs    {[0 0] 0}
-           to-check (neighbors size [0 0])]
+           to-check (->> (neighbors size [0 0])
+                         (filter board))]
       (if (seq to-check)
         (let [updated-costs (reduce (fn [m pos]
                                   (->> (neighbors size pos)
