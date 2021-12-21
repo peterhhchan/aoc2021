@@ -55,7 +55,7 @@
      (* (- y b) (- y b))
      (* (- z c) (- z c))))
 
-(defn distance-map [scanner]
+(defn distance-pairs [scanner]
   (->> (combo/combinations scanner 2)
        (map (fn [[x y]]
               {(distance x y) (list x y)}))
@@ -88,43 +88,43 @@
                   (Math/abs (- z c)))))
        (apply max)))
 
+;; 483, 14804
 (defn part1 []
-  (let [input     (vec (parse-input))
-        distances (->> input
-                       (map-indexed
-                        (fn [i scanner]
-                          [i (->> (combo/combinations scanner 2)
-                                  (map (fn [[x y]]
-                                         (distance x y)))
-                                  set)])))
-        pairs     (->> (combo/combinations distances 2)
-                       (keep (fn [[a b]]
-                               (when (>= (count (clojure.set/intersection (second a) (second b)))
-                                         66)
-                                 [(first a) (first b)]))))
-        [a b]     (first pairs)]
-    (loop [members  {a (set (input a))}
+  (let [input        (vec (parse-input))
+        beacon-dists (map-indexed (fn [i scanner]
+                                    [i (->> (combo/combinations scanner 2)
+                                            (map (fn [[x y]]
+                                                   (distance x y)))
+                                            set)])
+                                  input)
+        pairs        (->> (combo/combinations beacon-dists 2)
+                          (keep (fn [[a b]]
+                                  (when (>= (count (clojure.set/intersection (second a) (second b)))
+                                            66)
+                                    [(first a) (first b)]))))
+        [a b]        (first pairs)]
+    (loop [beacons  {a (set (input a))}
            scanners {a [0 0 0]}
-           pairs    pairs]
-      (if (empty? pairs)
-        {:counts    (count (apply clojure.set/union (vals members)))
+           scanner-pairs    pairs]
+      (if (empty? scanner-pairs)
+        {:counts    (count (apply clojure.set/union (vals beacons)))
          :distances (manhattan-distances scanners)}
-        (let [[a b]        (->> pairs
-                                (keep #(cond (members (first %))
-                                             [(first %) (second %)]
-                                             (members (second %))
-                                             [(second %) (first %)]))
-                                first)
-              x            (distance-map (members a))
-              y            (distance-map (input b))
-              pair         (first (clojure.set/intersection (set (keys x)) (set (keys y))))
-              [rot offset] (find-rotation (x pair) (y pair))
-              members*      (->> (map (partial rotate rot) (input b))
-                                 (map (partial add offset))
-                                 set
-                                 (assoc members b) )]
-          (recur members*
-                 (merge scanners {b offset})
-                 (->> pairs
-                      (remove #(and (members* (first %))
-                                    (members* (second %)))))))))))
+        (let [[s1 s2]    (->> scanner-pairs
+                              (keep (fn [[a b]]
+                                      (cond (beacons a) [a b]
+                                            (beacons b) [b a])))
+                              first)
+              dp-1       (distance-pairs (beacons s1))
+              dp-2       (distance-pairs (input s2))
+              pair       (first (clojure.set/intersection
+                                 (set (keys dp-1))
+                                 (set (keys dp-2))))
+              [r offset] (find-rotation (dp-1 pair) (dp-2 pair))
+              beacons*   (->> (input s2)
+                              (map (partial rotate r) )
+                              (map (partial add offset))
+                              set
+                              (assoc beacons s2) )]
+          (recur beacons*
+                 (merge scanners {s2 offset})
+                 (remove (fn [[s1 s2]]  (and (beacons* s1) (beacons* s2))) scanner-pairs)))))))

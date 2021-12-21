@@ -3,7 +3,7 @@
             [clojure.zip :as zip]))
 
 (defn data [] (slurp "data/day20.txt"))
-#_(defn data []
+(defn test-data []
 "..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..##
 #..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###
 .######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#.
@@ -17,6 +17,7 @@
 ##..#
 ..#..
 ..###")
+
 (defn convert [s]
   (-> s
       (str/replace  "." "0")
@@ -34,6 +35,7 @@
         b [-1 0 1]]
     [(+ a  x) (+ b y)]))
 
+;; Can also do neighbors of neighbors
 (defn expand [[x y]]
   (for [a (range -2 3)
         b (range -2 3)]
@@ -46,15 +48,14 @@
 
 (defn flash [n]
   (let [[decoder b] (parse-input)
+        light-value {\1 1 \0 0}
         grid  (mapv vec b)]
     (loop [pts (->> (for [x (range (count grid))
                           y (range (count grid))]
-                      (let [p (get-in grid [x y])]
-                        (if (= p \1)
-                          {[x y] 1}
-                          {[x y] 0})))
+                      {[x y] (-> (get-in grid [x y])
+                                 (light-value ))})
                     (into {}))
-           n 50
+           n n
            dark? true]
       (if (zero? n)
         (count (dark-points pts))
@@ -64,14 +65,12 @@
               (map (comp set expand first))
               (apply clojure.set/union)
               (pmap (fn [p]
-                     (let [v (->> (neighbors p)
-                                  (map #(get pts % (if dark? \0 \1)) )
-                                  (apply str "2r")
-                                  (read-string)
-                                  (get decoder))]
-                       (if (= v \1)
-                         {p 1}
-                         {p 0}))))
+                     {p (->> (neighbors p)
+                             (map #(get pts % (if dark? \0 \1)) )
+                             (apply str "2r")
+                             (read-string)
+                             (decoder)
+                             light-value)}))
               (into {}))
          (dec n)
          (not dark?))))))
