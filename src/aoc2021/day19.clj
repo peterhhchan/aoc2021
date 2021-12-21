@@ -21,10 +21,6 @@
   (->> (str/split (data) #"\n\n")
        (map parse-scanner)))
 
-(defn rotations [v]
-  (->>  (range 3)
-        (mapcat #(rotate v %))))
-
 (defn rx [p]
   (let [r [[1 0 0]
            [0 0 -1]
@@ -43,7 +39,6 @@
            [rx ry ry ry] [ry rx rx rx] [ry ry ry rx] [rx rx rx ry rx] [rx ry rx rx rx] [rx ry ry ry rx]])
 
 (defn rotate [rots p]  (reduce #(%2 %1) p rots ))
-
 (defn rotations [p]
   (->>  rots
         (map (fn [rot]
@@ -80,6 +75,13 @@
                          first)]
         [rot (offset a (rotate rot d))]))))
 
+
+(defn rotate-scanners [dp-1 dp-2]
+  (let [pair       (first (clojure.set/intersection
+                           (set (keys dp-1))
+                           (set (keys dp-2))))]
+    (find-rotation (dp-1 pair) (dp-2 pair))))
+
 (defn manhattan-distances [scanners]
   (->> (combo/combinations (vals scanners) 2)
        (map (fn [[[x y z] [a b c]]]
@@ -114,12 +116,8 @@
                                       (cond (beacons a) [a b]
                                             (beacons b) [b a])))
                               first)
-              dp-1       (distance-pairs (beacons s1))
-              dp-2       (distance-pairs (input s2))
-              pair       (first (clojure.set/intersection
-                                 (set (keys dp-1))
-                                 (set (keys dp-2))))
-              [r offset] (find-rotation (dp-1 pair) (dp-2 pair))
+              [r offset]  (rotate-scanners (distance-pairs (beacons s1))
+                                           (distance-pairs (input s2)))
               beacons*   (->> (input s2)
                               (map (partial rotate r) )
                               (map (partial add offset))
