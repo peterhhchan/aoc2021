@@ -6,21 +6,21 @@
 (defn data [] (slurp "data/day16.txt"))
 
 (def bits ["0" "1"])
-(defn decoder []
+(def char-to-bits
   (zipmap "0123456789ABCDEF"
-          (for [a bits b bits c bits d bits] (str a b c d))))
+          (for [a bits b bits c bits d bits]
+            (str a b c d))))
 
-(defn parse-input [input]
-  (->> input
-       (map (decoder))
+(defn bits [input]
+  (->> (map char-to-bits input)
        (str/join)))
 
 (defn to-num [bits]
   (read-string (apply str "2r" bits)))
 
-(defn my-decode
+(defn decode-bits
   ([msg]
-   (my-decode msg (count msg)))
+   (decode-bits msg (count msg)))
 
   ([msg bits-to-parse]
    (if (or  (every? #{\0} msg)
@@ -28,8 +28,8 @@
      nil
      (let [version (to-num (subs msg 0 3))
            type-id (to-num (subs msg 3 6))
-           packet {:type-id type-id
-                   :version version}]
+           packet  {:type-id type-id
+                    :version version}]
        (if (= 4 type-id)
          (let [packets         (->> (subs msg 6)
                                     (partition 5))
@@ -39,34 +39,30 @@
                value           (->> (take total-bits packets)
                                     (map rest)
                                     (map (partial str/join))
-                                    (str/join)
-                                    (str "2r")
-                                    (read-string))
-               remaining         (- bits-to-parse packet-length)]
-           (if (pos? remaining)
-             (concat [(merge packet {:value value})]
-                     (my-decode (subs msg packet-length (+ packet-length remaining)) remaining))
-             [(merge packet {:value value})]))
+                                    (to-num))
+               remaining       (- bits-to-parse packet-length)]
+           (concat [(merge packet {:value value})]
+                   (decode-bits (subs msg packet-length (+ packet-length remaining))
+                                remaining)))
          (let [length-type (nth msg 6)
-               res (merge packet
-                          {:op length-type})]
+               res         (assoc packet :op length-type)]
            (if (= \0 length-type)
-             (let [total-length (to-num (subs msg 7 (+ 7 15)) )]
-               (concat [(merge res
-                               {:children (my-decode (subs msg 22 (+ 22 total-length)) total-length )})]
-                       (my-decode (subs msg (+ 22 total-length))
-                                  (- bits-to-parse (+ 22  total-length)))))
-             (let [sub-packets (to-num (subs msg 7 (+ 7 11)) )
-                   next-packets (my-decode (subs msg 18) (- (count msg) 18))]
-               (concat [(merge res
-                               {:sub-packets sub-packets
-                                :children (take sub-packets next-packets)})]
-                       (drop sub-packets next-packets))))))))))
+             (let [len (to-num (subs msg 7 (+ 7 15)) )]
+               (concat [(assoc res :children (decode-bits (subs msg 22 (+ 22 len)) len))]
+                       (decode-bits (subs msg (+ 22 len))
+                                    (- bits-to-parse (+ 22 len)))))
+             (let [n            (to-num (subs msg 7 (+ 7 11)) )
+                   next-packets (decode-bits (subs msg 18)
+                                             (- (count msg) 18))]
+               (concat [(assoc res
+                               :sub-packets n
+                               :children    (take n next-packets))]
+                       (drop n next-packets))))))))))
 
-(defn ppart1 []
+(defn part1 []
   (->> (data)
-       (parse-input)
-       my-decode
+       (bits )
+       decode-bits
        (version-sum )))
 
 
@@ -78,36 +74,30 @@
     (reduce + (map version-sum t))))
 
 
-(defn solve [t]
-  (if (map? t)
-    (if (:value t)
-      (:value t)
-      (let [type-id    (:type-id t)
-            my-compare (fn  [op n]
-                         (when (or (nil? (first n))
-                                 (nil? (second n))))
-                         (if (op (solve (first n))
-                                 (solve (second n)))
-                           1 0))]
-        (case type-id
-          0 (reduce + (map solve (:children t)))
-          1 (reduce * (map solve (:children t)))
-          2 (apply min (map solve (:children t)))
-          3 (apply max (map solve (:children t)))
-          5 (my-compare > (:children t))
-          6 (my-compare < (:children t))
-          7 (my-compare = (:children t)))))
-    (if (nil? t)
-      nil
-      (solve (first t)))))
+(defn reduce-by-type [t]
+  (cond (nil? t) nil
+        (not (map? t)) (reduce-by-type (first t))
+        (:value t) (:value t)
+        :else
+        (let [compare-children #(get {true 1 false 0}
+                                     (% (reduce-by-type (first (:children t)))
+                                        (reduce-by-type (second (:children t)))))
+              reduce-children #(reduce % (map reduce-by-type (:children t)))]
+        (case (:type-id t)
+          0 (reduce-children +)
+          1 (reduce-children *)
+          2 (reduce-children min)
+          3 (reduce-children max)
+          5 (compare-children > )
+          6 (compare-children < )
+          7 (compare-children = )))))
 
 
-
+;; 12301926782560
 (defn part2 []
-  (->> (data)
-       (parse-input)
-       my-decode
-       solve)
+  (->> (bits (data))
+       decode-bits
+       reduce-by-type)
 )
 
 (def tests
@@ -121,10 +111,9 @@
           ;;  (data)
           ]))
 
-(defn part1 []
+(defn tests []
   (->> tests
        (map parse-input)
-       (map my-decode)
+       (map decode-bits)
        (map version-sum)
-       (zipmap tests)
-       ))
+       (zipmap tests)))
