@@ -63,7 +63,10 @@
        (pmap solve-line-a)
        (reduce +)))
 
+;;
 ;; Approach 2
+;;
+
 (defn result [segments col]
   (first (filter #(= segments (count %)) col)))
 

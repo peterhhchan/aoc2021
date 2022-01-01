@@ -1,18 +1,20 @@
 (ns aoc2021.day15
-  (:require [clojure.string :as str]
-            [clojure.set :as set]))
+  (:require [clojure.data.priority-map :refer [priority-map]]
+            [clojure.set :as set]
+            [clojure.string :as str]))
+
+;; --- Day 15: Chiton ---
 
 (defn parse-long [s]  (Long/parseLong s))
 (defn data [] (slurp "data/day15.txt"))
 
-(defn parse-input []
-  (->> (data)
-       ;; test-data
+(defn parse-input [input]
+  (->> input
        (str/split-lines)
        (map #(re-seq #"\d" %))
        (mapv #(mapv parse-long %))))
 
-(defn neighbors [n [x y]]
+(defn neighbors [[x y]]
   [[(inc x) y]
    [x (inc y)]
    [x (dec y)]
@@ -33,56 +35,40 @@
        (apply concat)
        (mapv vec)))
 
-(defn candidates [board size costs cur]
-  (->> (neighbors size cur)
-       (filter board)
-       (filter (fn [next]
-                 (> (get costs next 999999)
-                    (+ (board next) (costs cur)))))))
+;; Djikstra implementation
+(defn min-risk [input]
+  (let [n    (count input)
+        grid (->> (for [x (range n)
+                        y (range n)]
+                    [x y])
+                  (reduce #(assoc %1 %2 (get-in input %2))
+                          {}))]
+    (loop [visited  {}
+           to-visit (priority-map [0 0] 0)]
+      (if-let [total-risk (visited [(dec n) (dec n)])]
+        total-risk
+        (let [visited     (conj visited (first to-visit))
 
-
-(defn min-cost [coords]
-  (let [size  (count coords)
-        board (reduce (fn [m pos]
-                        (assoc m pos (get-in coords pos)))
-                      {}
-                      (for [x (range size) y (range size)] [x y]))]
-    (loop [costs    {[0 0] 0}
-           to-check (->> (neighbors size [0 0])
-                         (filter board))]
-      (if (seq to-check)
-        (let [updated-costs (reduce (fn [m pos]
-                                  (->> (neighbors size pos)
-                                       (keep m)
-                                       (apply min)
-                                       (+ (board pos))
-                                       (assoc m pos)))
-                                costs
-                                to-check)
-
-              to-check-next (->> to-check
-                                 (mapcat #(candidates board size updated-costs %) )
-                                 set)]
-          (recur updated-costs to-check-next))
-        (get costs [(dec size) (dec size)])))))
+              ;; using a transducer improves performance from ~35s to ~4s
+              tf          (comp (remove visited)
+                                (filter grid)
+                                (map (fn [pos]
+                                       [pos (->> (neighbors pos)
+                                                 (keep visited)
+                                                 (apply min)
+                                                 (+ (grid pos) ))])))]
+          (recur visited
+                 (into (pop to-visit)
+                       tf
+                       (neighbors (ffirst to-visit)))))))))
 
 ;;741
-(defn part1 []
-  (min-cost (parse-input)))
+(defn part1 [input]
+  (->> (parse-input input)
+       min-risk))
 
 ;; 2976
-(defn part2 []
-  (min-cost (expand 5 (parse-input))))
-
-
-(def test-data
-"1163751742
-1381373672
-2136511328
-3694931569
-7463417111
-1319128137
-1359912421
-3125421639
-1293138521
-2311944581")
+(defn part2 [input]
+  (->> (parse-input input)
+       (expand 5)
+       min-risk))

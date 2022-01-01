@@ -35,13 +35,12 @@
                                     (partition 5))
                [lead-bits & _] (split-with #(= \1 (first %)) packets)
                total-bits      (inc (count lead-bits))
-               packet-length   (+ 6  (* 5 total-bits))
-               value           (->> (take total-bits packets)
-                                    (mapcat rest)
-                                    (to-num))
-               remaining       (- bits-to-parse packet-length)]
-           (concat [(merge packet {:value value})]
-                   (decode-bits (subs msg packet-length (+ packet-length remaining))
+               len   (+ 6  (* 5 total-bits))
+               remaining       (- bits-to-parse len)]
+           (concat [(merge packet {:value  (->> (take total-bits packets)
+                                                (mapcat rest)
+                                                (to-num))})]
+                   (decode-bits (subs msg len (+ len remaining))
                                 remaining)))
          (let [length-type (nth msg 6)
                res         (assoc packet :op length-type)]
@@ -58,13 +57,6 @@
                                :children    (take n next-packets))]
                        (drop n next-packets))))))))))
 
-(defn part1 []
-  (->> (data)
-       (bits )
-       decode-bits
-       (version-sum )))
-
-
 (defn version-sum [t]
   (if (map? t)
     (reduce +
@@ -72,11 +64,17 @@
             (map version-sum (:children t)))
     (reduce + (map version-sum t))))
 
+;; 960
+(defn part1 []
+  (->> (data)
+       bits
+       decode-bits
+       version-sum ))
 
 (defn reduce-by-type [t]
-  (cond (nil? t) nil
+  (cond (nil? t)       nil
         (not (map? t)) (reduce-by-type (first t))
-        (:value t) (:value t)
+        (:value t)     (:value t)
         :else
         (let [compare-children #(get {true 1 false 0}
                                      (% (reduce-by-type (first (:children t)))
@@ -110,7 +108,7 @@
 (defn run-tests []
   (->> tests
        (map first)
-       (map parse-input)
+       (map bits)
        (map decode-bits)
        (map version-sum)
        (zipmap tests)))

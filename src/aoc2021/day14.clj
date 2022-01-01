@@ -2,27 +2,9 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
+;; --- Day 14: Extended Polymerization ---
+
 (defn data [] (slurp "data/day14.txt"))
-(defn test-data []
-"NNCB
-
-CH -> B
-HH -> N
-CB -> H
-NH -> C
-HB -> C
-HC -> B
-HN -> C
-NN -> C
-BH -> H
-NC -> B
-NB -> B
-BN -> B
-BB -> N
-BC -> B
-CC -> N
-CN -> C")
-
 
 (defn parse-input [input]
   (let [[h r] (str/split input #"\n\n")
@@ -34,6 +16,9 @@ CN -> C")
     {:template h
      :rules    rules}))
 
+;; Because we don't need to remember the exact sequence, we can
+;; represent the polymer as a frequency o fpairs instead. Each
+;; insertion adds two new pairs and removes an existing one.
 (defn step [rules polymer]
   (reduce-kv (fn [p k v]
                (let [[a b] (rules k)]
@@ -44,19 +29,20 @@ CN -> C")
              polymer
              polymer))
 
+;; We need to be careful not to dbl count the pairs
 (defn count-freqs [template freqs]
   (->> freqs
        (map (fn [[[a b] v]]
               {b v}))
        (apply merge-with + {(first template) 1})))
 
-(defn solve [input steps]
+(defn solve [input n]
   (let [{:keys [template rules]} (parse-input input)]
     (->> (partition 2 1 template)
          (map str/join)
          (frequencies)
          (iterate (partial step rules))
-         (drop steps)
+         (drop n)
          first
          (count-freqs template)
          (map second)

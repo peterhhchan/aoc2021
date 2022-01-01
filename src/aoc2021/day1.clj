@@ -12,6 +12,8 @@
        (filter pos?)
        count))
 
+;; No need to sum each window up as the elements of the windows
+;; overlap and cancel each other out
 (defn part2 []
   (->> (map - (drop 3 data) data)
        (filter pos?)

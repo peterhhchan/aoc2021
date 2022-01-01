@@ -13,7 +13,10 @@
        clojure.string/split-lines
        (map str-to-ints)))
 
+;;
 ;; Solution 1 - handle diagonals differently, uses a map
+;;
+
 (defn range-inclusive [s e]
   (if (< s e)
     (range s (inc e))

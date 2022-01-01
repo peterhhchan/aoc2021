@@ -2,24 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
-(def test-0 "start-A
-start-b
-A-c
-A-b
-b-d
-A-end
-b-end")
-
-(def test-1 "dc-end
-HN-start
-start-kj
-dc-start
-dc-HN
-LN-dc
-HN-end
-kj-sa
-kj-HN
-kj-dc")
+;;--- Day 12: Passage Pathing ---
 
 (defn data []
   (slurp "data/day12.txt"))
@@ -78,6 +61,7 @@ kj-dc")
 (defn part2 [input]
   (count-paths (parse-input input) true (list "start")))
 
+;; Just like `count-paths` but we recur with `visited`
 (defn count-paths-faster [caves visit-again? visited current]
   (->> (caves current)
        (keep (fn [n]

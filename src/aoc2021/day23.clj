@@ -12,9 +12,10 @@
        (str/split-lines)))
 
 (defn data-part-two []
-  (let [d (data)
-        a (str/split-lines cave-addition)]
-    (vec (concat (take 3 (data)) a (drop 3 (data))))))
+  (let [d (data)]
+    (vec (concat (take 3 d)
+                 (str/split-lines cave-addition)
+                 (drop 3 d)))))
 
 (defn parse-input [input]
   (let [squares (set ".ABCD")]
@@ -161,7 +162,6 @@
                                    (assoc start \.))
                         :cost  pth-cost}))))))))
 
-
 ;;13066 - 33s
 (defn part1 []
   (brute-force (data) 15000))
@@ -169,38 +169,3 @@
 ;;47328 - 34s
 (defn part2 []
   (brute-force (data-part-two) 50000))
-
-;; Dijkstra
-(defn search [data]
-  (let [cavern (parse-input data)
-        paths  (->> (for [s     (keys cavern)
-                          e     (keys cavern)
-                          :when (not= s e)]
-                      {[s e] (path cavern s e)})
-                    (into {}))]
-    (loop [states (pq/priority-queue :cost
-                                     :priority-comparator compare
-                                     :elements [{:state cavern
-                                                 :cost  0}])
-           seen   #{}]
-      (let [{:keys [state cost]} (peek states)
-            moves                (->> state
-                                      (remove (fn [[k v]]
-                                                (empty-square? v)))
-                                      (filter (fn [[k v]]
-                                                (->> (keep state (neighbors k))
-                                                     (some empty-square?))))
-                                      (mapcat #(move-piece paths state cost %)))]
-        (if (= (count state) (count hallway))
-          cost
-          (recur (->> (remove seen moves)
-                      (into (pop states)))
-                 (into seen moves)))))))
-
-;; 13066 (~80-90s)
-(defn part1b []
-  (search (data)))
-
-;; 47328 ~ 37s
-(defn part2b []
-  (search (data-part-two)))
