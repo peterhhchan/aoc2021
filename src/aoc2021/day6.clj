@@ -14,7 +14,7 @@
        (map (fn [[k v]]
               (cond (pos? k)  {(dec k) v}
                     (zero? k) {8 v
-                               6 (get state 0 0)})))
+                               6 v})))
        (apply merge-with + )))
 
 (defn count-births [n]

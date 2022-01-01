@@ -49,14 +49,13 @@
 (defn flash [n]
   (let [[decoder b] (parse-input)
         light-value {\1 1 \0 0}
-        grid  (mapv vec b)]
+        grid        (mapv vec b)]
     (loop [pts (->> (for [x (range (count grid))
                           y (range (count grid))]
                       {[x y] (-> (get-in grid [x y])
                                  (light-value ))})
                     (into {}))
-           n n
-           dark? true]
+           n   n]
       (if (zero? n)
         (count (dark-points pts))
         (recur
@@ -65,15 +64,14 @@
               (map (comp set expand first))
               (apply clojure.set/union)
               (pmap (fn [p]
-                     {p (->> (neighbors p)
-                             (map #(get pts % (if dark? \0 \1)) )
-                             (apply str "2r")
-                             (read-string)
-                             (decoder)
-                             light-value)}))
+                      {p (->> (neighbors p)
+                              (map #(get pts % (if (even? n) \0 \1)) )
+                              (apply str "2r")
+                              (read-string)
+                              (decoder)
+                              light-value)}))
               (into {}))
-         (dec n)
-         (not dark?))))))
+         (dec n))))))
 
 ;; 4928
 (defn part1 [] (flash 2))

@@ -1,6 +1,7 @@
 (ns aoc2021.day8
   (:require [clojure.string :as str]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.math.combinatorics :as combo]))
 
 (defn parse-int [s]  (Integer/parseInt s))
 (defn str-to-ints [s]
@@ -21,19 +22,12 @@
        (map #(map count %))
        (flatten)
        (filter #(#{2 4 3 7} %)))))
-
+;;
 ;; Day 8 Brute force apprach
-
-(defn permutations [s]
-  (lazy-seq
-   (if (seq (rest s))
-     (apply concat (for [x s]
-                     (map #(cons x %) (permutations (remove #{x} s)))))
-     [s])))
-
+;;
 (defn all-permutations []
   (let [s "abcdefgh"]
-    (->> (permutations s)
+    (->> (combo/permutations s)
          (map #(zipmap % s)))))
 
 (defn solve-line-a [digits]
@@ -47,8 +41,7 @@
                        7 "acf"
                        8 "abcdefg"
                        9 "abcdfg"}
-                     (reduce-kv (fn [m k v]
-                                  (assoc m (set v) k))
+                     (reduce-kv #(assoc %1 (set %3) %2)
                                 {}))
         solution (->> (all-permutations)
                       (filter (fn [p]

@@ -119,7 +119,7 @@
               [r offset]  (rotate-scanners (distance-pairs (beacons s1))
                                            (distance-pairs (input s2)))
               beacons*   (->> (input s2)
-                              (map (partial rotate r) )
+                              (map (partial rotate r))
                               (map (partial add offset))
                               set
                               (assoc beacons s2) )]

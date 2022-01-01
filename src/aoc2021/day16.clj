@@ -33,12 +33,11 @@
        (if (= 4 type-id)
          (let [packets         (->> (subs msg 6)
                                     (partition 5))
-               [lead-bits & r] (split-with #(= \1 (first %)) packets)
+               [lead-bits & _] (split-with #(= \1 (first %)) packets)
                total-bits      (inc (count lead-bits))
                packet-length   (+ 6  (* 5 total-bits))
                value           (->> (take total-bits packets)
-                                    (map rest)
-                                    (map (partial str/join))
+                                    (mapcat rest)
                                     (to-num))
                remaining       (- bits-to-parse packet-length)]
            (concat [(merge packet {:value value})]
@@ -97,8 +96,7 @@
 (defn part2 []
   (->> (bits (data))
        decode-bits
-       reduce-by-type)
-)
+       reduce-by-type))
 
 (def tests
   (sort  [["38006F45291200" 9]
@@ -107,12 +105,11 @@
           ["D2FE28" 6]
           ["EE00D40C823060" 14]
           ["C0015000016115A2E0802F182340" 23]
-          ["A0016C880162017C3686B18A3D4780" 31]
-          ;;  (data)
-          ]))
+          ["A0016C880162017C3686B18A3D4780" 31]]))
 
-(defn tests []
+(defn run-tests []
   (->> tests
+       (map first)
        (map parse-input)
        (map decode-bits)
        (map version-sum)

@@ -37,7 +37,6 @@
   (let [{:keys [numbers cards]} (parse-input input)]
     (find-winner cards numbers )))
 
-
 ;; 41503
 (defn part1 [input]
   (first (winners input)))
