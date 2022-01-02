@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
+;; --- Day 17: Trick Shot ---
+
 (defn data [] (slurp "data/day17.txt"))
 
 (defn parse-input []
@@ -32,8 +34,9 @@
 
 ;; 5565 , 176 results
 (defn part1 []
+;;  
   (let [[_ _ max-y min-y] (parse-input)]
-    (->> (range max-y (inc  (Math/abs max-y)))
+    (->> (range max-y (inc (Math/abs max-y)))
          (keep #(explore [0 0 max-y min-y] 0 %))
          (sort-by :max-height)
          count)))

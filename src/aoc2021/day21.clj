@@ -1,6 +1,8 @@
 (ns aoc2021.day21
   (:require [clojure.math.combinatorics :as combo]))
 
+;; --- Day 21: Dirac Dice ---
+
 (def input [6 9])
 
 ;; We don't actually use this die, shown for correctness

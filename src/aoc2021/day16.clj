@@ -3,6 +3,8 @@
             [clojure.set :as set]
             [clojure.zip :as zip]))
 
+;;--- Day 16: Packet Decoder ---
+
 (defn data [] (slurp "data/day16.txt"))
 
 (def bits ["0" "1"])
@@ -18,6 +20,14 @@
 (defn to-num [bits]
   (read-string (apply str "2r" bits)))
 
+(defn read-literal [msg]
+  (let [packets         (partition 5 msg)
+        [lead-bits & _] (split-with #(= \1 (first %)) packets)
+        total-bits      (inc (count lead-bits))
+        len             (+ 6  (* 5 total-bits))]
+    [len (->> (take total-bits packets)
+              (mapcat rest))]))
+
 (defn decode-bits
   ([msg]
    (decode-bits msg (count msg)))
@@ -31,25 +41,20 @@
            packet  {:type-id type-id
                     :version version}]
        (if (= 4 type-id)
-         (let [packets         (->> (subs msg 6)
-                                    (partition 5))
-               [lead-bits & _] (split-with #(= \1 (first %)) packets)
-               total-bits      (inc (count lead-bits))
-               len   (+ 6  (* 5 total-bits))
-               remaining       (- bits-to-parse len)]
-           (concat [(merge packet {:value  (->> (take total-bits packets)
-                                                (mapcat rest)
-                                                (to-num))})]
+         (let [[len literal] (read-literal (subs msg 6))
+               remaining     (- bits-to-parse len)]
+           (concat [(merge packet {:value (to-num literal)})]
                    (decode-bits (subs msg len (+ len remaining))
                                 remaining)))
          (let [length-type (nth msg 6)
                res         (assoc packet :op length-type)]
            (if (= \0 length-type)
-             (let [len (to-num (subs msg 7 (+ 7 15)) )]
-               (concat [(assoc res :children (decode-bits (subs msg 22 (+ 22 len)) len))]
-                       (decode-bits (subs msg (+ 22 len))
-                                    (- bits-to-parse (+ 22 len)))))
-             (let [n            (to-num (subs msg 7 (+ 7 11)) )
+             (let [len      (to-num (subs msg 7 22))
+                   next-len (+ 22 len)]
+               (concat [(assoc res :children (decode-bits (subs msg 22 next-len) len))]
+                       (decode-bits (subs msg next-len)
+                                    (- bits-to-parse next-len))))
+             (let [n            (to-num (subs msg 7 18) )
                    next-packets (decode-bits (subs msg 18)
                                              (- (count msg) 18))]
                (concat [(assoc res

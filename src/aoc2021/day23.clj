@@ -3,6 +3,9 @@
              [clojure.data.priority-map :refer [priority-map]]
              [shams.priority-queue :as pq]))
 
+;; --- Day 23: Amphipod ---
+;; The solution here isnt great.  Nothing to see here.
+
 (def cave-addition
 "  #D#C#B#A#
   #D#B#A#C#")
@@ -132,35 +135,6 @@
                                     (apply min)))))))))]
     (mem-game cavern 0)))
 
-(def hallway
-  (mapv (fn [y] [1 y])  (range 1 12)))
-
-(def home-column (zipmap "ABCD"
-                  (for [x home-columns]
-                    (vec (for [y (range 5 1 -1)]
-                           [y x])))))
-
-(defn move-piece [paths state cost [start piece-type]]
-  (let [home         (->>  (home-column piece-type)
-                           (filter state)
-                           first)
-        destinations (if (hallway? start)
-                       [home]
-                       (conj hallway home))]
-    (->> destinations
-         (keep (fn [end]
-                 (let [pth      (rest (paths [start end]))
-                       pth-cost (+ cost (* (move-costs piece-type) (count pth)))]
-                   (when (and (not (blocking-room? end))
-                              (seq pth)
-                              (every? #(empty-square? (state %)) pth))
-                     (if (starting-room? end)
-                       {:state (-> (dissoc state end)
-                                   (assoc start \.))
-                        :cost  pth-cost}
-                       {:state (-> (assoc state end piece-type)
-                                   (assoc start \.))
-                        :cost  pth-cost}))))))))
 
 ;;13066 - 33s
 (defn part1 []

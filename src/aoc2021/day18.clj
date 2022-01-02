@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.zip :as zip]))
 
+;; --- Day 18: Snailfish ---
+
 (defn data [] (slurp "data/day18.txt"))
 (defn parse-input []
   (->> (data)
